@@ -1,0 +1,4 @@
+big performance improvement for find_seed
+  if 100 possible trainer, and watnted is idx 10
+  then generate 10, then 110, then 210.
+  no point trying 11

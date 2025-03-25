@@ -1,0 +1,26 @@
+[package]
+name = "pk_platinum_battle_facilities_rng_manip"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasm-bindgen = "0.2"
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+lazy_static = "1.5.0"
+console_error_panic_hook = "0.1.7"
+
+[profile.release]
+debug = true
+codegen-units = 1
+lto = "fat"
+
+[[bin]]
+name = "pk_platinum_battle_facilities_rng_manip"
+path = "src/bin.rs"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[build]
+rustflags = ["-C", "target-cpu=native","-A non_snake_case"]
