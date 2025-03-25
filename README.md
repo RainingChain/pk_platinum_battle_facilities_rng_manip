@@ -1,0 +1,2 @@
+# pk_platinum_battle_facilities_rng_manip
+Pokemon Platinum Battle Facilities RNG Manipulation
