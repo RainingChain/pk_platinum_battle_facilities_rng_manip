@@ -364,7 +364,7 @@ impl Options {
     }
 
     if self.max_same_day_adv == 0 && self.at_least_one_same_day_adv {
-      self.errors.push(String::from("Warning: --max_same_day_adv 0 and --at_least_one_same_day_adv true are not compatible."));
+      self.at_least_one_same_day_adv = false;
     }
 
     for error in self.errors.iter() {

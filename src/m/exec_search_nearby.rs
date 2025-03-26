@@ -136,7 +136,14 @@ fn for_each_nearby_seed<F>(exec_info:&ExecInfo, mut func:F)
       SameDayRNG::next32_s(diff_day_seed_if_not_0)
     };
 
-    for same_day_adv in 0..=exec_info.opts.max_same_day_adv {
+    if !exec_info.opts.at_least_one_same_day_adv {
+      if func(same_day_seed_after_diff_adv, 0, diff_day_seed_if_not_0, diff_day_adv) {
+        return
+      }
+    }
+    same_day_seed_after_diff_adv = SameDayRNG::next32_s(same_day_seed_after_diff_adv);
+
+    for same_day_adv in 1..=exec_info.opts.max_same_day_adv {
       if func(same_day_seed_after_diff_adv, same_day_adv, diff_day_seed_if_not_0, diff_day_adv) {
         return
       }
@@ -307,7 +314,7 @@ mod tests {
   #[test]
   fn test_search_nearby_singles_wins7_diff0_same0() {
     assert_eq!(
-      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_adv 2 --max_same_day_adv 2",
+      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_adv 2 --max_same_day_adv 2 --at_least_one_same_day_adv false",
         Some(0), Some(0), true),
 
       "0x4cb8e431 (t110=Black Belt Soren:p247=Kabutops 1,a1|p164=Pupitar 1,a1|p213=Hitmonlee 1,a0|), (t117=Socialite Barbara:p225=Tropius 1,a0|p227=Magneton 1,a0|p237=Kingler 1,a1|), (t96=Cameraman Amleth:p136=Illumise 1,a0|p109=Nidorina 1,a1|p110=Nidorino 1,a0|), (t86=Worker Shane:p114=Corsola 1,a0|p90=Rhyhorn 1,a0|p42=Machop 1,a1|), (t103=Cyclist♀ Kaya:p152=Wartortle 1,a0|p199=Kecleon 1,a1|p150=Ivysaur 1,a1|), (t113=Battle Girl Ingrid:p161=Prinplup 1,a0|p196=Vigoroth 1,a0|p167=Gabite 1,a1|), (t137=Scientist Brad:p284=Chimecho 2,a1|p282=Wigglytuff 2,a1|p281=Mothim 2,a0|), "
@@ -317,7 +324,7 @@ mod tests {
   #[test]
   fn test_search_nearby_singles_wins7_diff0_same1() {
     assert_eq!(
-      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_adv 2 --max_same_day_adv 2",
+      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_adv 2 --max_same_day_adv 2 --at_least_one_same_day_adv false",
         Some(0), Some(1), true),
 
       "0xe6b0a256 (t108=Black Belt Jericho:p157=Combusken 1,a0|p185=Gligar 1,a1|p203=Sandslash 1,a1|), (t86=Worker Shane:p73=Aron 1,a1|p23=Riolu 1,a0|p122=Onix 1,a1|), (t106=Battle Girl Kodi:p220=Zangoose 1,a0|p176=Linoone 1,a1|p243=Relicanth 1,a1|), (t111=Battle Girl Trina:p249=Cloyster 1,a1|p246=Omastar 1,a1|p169=Raticate 1,a1|), (t81=Idol Ada:p123=Lickitung 1,a1|p145=Plusle 1,a0|p108=Dunsparce 1,a0|), (t105=Black Belt Mason:p160=Monferno 1,a0|p214=Hitmonchan 1,a1|p158=Marshtomp 1,a0|), (t125=Psychic♀ Jillian:p281=Mothim 2,a1|p329=Stantler 2,a0|p292=Misdreavus 2,a1|), "
@@ -328,7 +335,7 @@ mod tests {
   #[test]
   fn test_search_nearby_singles_wins7_diff1_same0() {
     assert_eq!(
-      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_adv 2 --max_same_day_adv 2",
+      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_adv 2 --max_same_day_adv 2 --at_least_one_same_day_adv false",
         Some(1), Some(0), true),
 
       "0x713b6ba5 (t109=Black Belt Harris:p249=Cloyster 1,a1|p244=Electabuzz 1,a0|p171=Furret 1,a1|), (t117=Socialite Barbara:p234=Torkoal 1,a1|p216=Hitmontop 1,a0|p206=Seaking 1,a0|), (t112=Battle Girl Alta:p171=Furret 1,a1|p203=Sandslash 1,a1|p179=Metang 1,a1|), (t86=Worker Shane:p42=Machop 1,a1|p45=Numel 1,a0|p24=Bonsly 1,a0|), (t92=Cowgirl Paisley:p101=Kabuto 1,a0|p117=Mawile 1,a0|p112=Magby 1,a1|), (t89=Rancher Etienne:p131=Munchlax 1,a1|p142=Togetic 1,a0|p112=Magby 1,a1|), (t129=Pokémon Breeder♀ Adriana:p314=Hitmonchan 2,a0|p332=Pidgeot 2,a1|p342=Gorebyss 2,a0|), "
@@ -339,7 +346,7 @@ mod tests {
   fn test_search_nearby_singles_wins7_diff50000_same0() {
     //2000-01-01 -> 2099-12-31 (x1), 2000-01-01 -> 2036-11-23
     assert_eq!(
-      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_change 2 --max_same_day_adv 2",
+      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_change 2 --max_same_day_adv 2 --at_least_one_same_day_adv false",
         Some(50000), Some(0), true),
       "0x261fb84 (t88=Rancher Pierce:p119=Butterfree 1,a0|p111=Flaaffy 1,a0|p108=Dunsparce 1,a0|), (t101=Cyclist♂ Ignatio:p195=Seadra 1,a1|p178=Shelgon 1,a0|p189=Pelipper 1,a0|), (t83=Idol Basia:p69=Teddiursa 1,a1|p48=Swablu 1,a0|p67=Voltorb 1,a1|), (t105=Black Belt Mason:p190=Lairon 1,a1|p231=Crawdaunt 1,a0|p247=Kabutops 1,a0|), (t111=Battle Girl Trina:p197=Lunatone 1,a1|p154=Quilava 1,a0|p237=Kingler 1,a0|), (t104=Black Belt Clement:p229=Stantler 1,a0|p152=Wartortle 1,a0|p198=Solrock 1,a1|), (t123=Psychic♀ Amelia:p284=Chimecho 2,a1|p335=Grumpig 2,a1|p302=Noctowl 2,a1|), "
     );
@@ -350,7 +357,7 @@ mod tests {
   fn test_search_nearby_singles_wins7_diff40000_same3() {
     //2000-01-01 -> 2099-12-31 (x1), 2000-01-01 -> 2009-7-8
     assert_eq!(
-      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_change 2 --max_same_day_adv 3",
+      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 1 --max_diff_day_change 2 --max_same_day_adv 3 --at_least_one_same_day_adv false",
         Some(40000), Some(3), true),
       "0x70431e03 (t88=Rancher Pierce:p103=Anorith 1,a1|p101=Kabuto 1,a0|p124=Beautifly 1,a0|), (t98=Reporter Marble:p60=Grimer 1,a1|p53=Psyduck 1,a1|p78=Skorupi 1,a0|), (t113=Battle Girl Ingrid:p203=Sandslash 1,a0|p185=Gligar 1,a0|p164=Pupitar 1,a0|), (t91=Cowgirl Doris:p149=Azumarill 1,a0|p102=Lileep 1,a0|p118=Kricketune 1,a1|), (t112=Battle Girl Alta:p205=Chansey 1,a0|p244=Electabuzz 1,a1|p220=Zangoose 1,a0|), (t106=Battle Girl Kodi:p249=Cloyster 1,a1|p152=Wartortle 1,a1|p205=Chansey 1,a1|), (t129=Pokémon Breeder♀ Adriana:p342=Gorebyss 2,a1|p308=Piloswine 2,a1|p320=Zangoose 2,a1|), "
     );
@@ -362,7 +369,7 @@ mod tests {
   fn test_search_nearby_perfect_count() {
     let min_rating = 19f32;
     for i in 0..54 {
-      let cmd = format!("cargo run -- search_easy --facility single --same_day_seed 0 --diff_day_seed 0 --wins 49 --filter_min_rating {} --max_diff_day_change 999999 --max_same_day_adv 0 --search_stop_on_perfect_rating false --search_update_min_filter false --player_pokemons_idx_filter {}", min_rating, i);
+      let cmd = format!("cargo run -- search_easy --facility single --same_day_seed 0 --diff_day_seed 0 --wins 49 --filter_min_rating {} --max_diff_day_change 999999 --max_same_day_adv 0 --search_stop_on_perfect_rating false --search_update_min_filter false --at_least_one_same_day_adv false --player_pokemons_idx_filter {}", min_rating, i);
       let cnt = helper_internal(&cmd, None, None, false).1;
       println!("pmon_idx {} => {} results with rating >= {}", i, cnt, min_rating);
     }
@@ -373,7 +380,7 @@ mod tests {
   #[test]
   fn test_search_nearby_debug() {
     assert_eq!(
-      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 19 --max_diff_day_change 5 --max_same_day_adv 5", None, None, false),
+      helper("cargo run -- search_easy --facility single --same_day_seed 0x4CB8E431 --diff_day_seed 0xcfa835d7 --wins 7 --filter_min_rating 19 --max_diff_day_change 5 --max_same_day_adv 5 --at_least_one_same_day_adv false", None, None, false),
       "0x70431e03 (t88=Rancher Pierce:p103=Anorith 1,a1|p101=Kabuto 1,a1|p124=Beautifly 1,a1|), (t98=Reporter Marble:p60=Grimer 1,a1|p53=Psyduck 1,a1|p78=Skorupi 1,a1|), (t113=Battle Girl Ingrid:p203=Sandslash 1,a0|p185=Gligar 1,a0|p164=Pupitar 1,a0|), (t91=Cowgirl Doris:p149=Azumarill 1,a0|p102=Lileep 1,a0|p118=Kricketune 1,a0|), (t112=Battle Girl Alta:p205=Chansey 1,a0|p244=Electabuzz 1,a0|p220=Zangoose 1,a0|), (t106=Battle Girl Kodi:p249=Cloyster 1,a0|p152=Wartortle 1,a0|p205=Chansey 1,a0|), (t129=Pokémon Breeder♀ Adriana:p342=Gorebyss 2,a0|p308=Piloswine 2,a0|p320=Zangoose 2,a0|), "
     );
   }
