@@ -2,3 +2,29 @@ big performance improvement for find_seed
   if 100 possible trainer, and watnted is idx 10
   then generate 10, then 110, then 210.
   no point trying 11
+
+
+shedinja strategy
+
+Shedinja @ Focus Sash
+Adamant Nature
+EVs: 252 Atk / 252 Spe
+- Swords Dance
+- X-Scissor
+- Shadow Sneak
+- Filler / Will-O-Wisp / Toxic / No move
+
+  1st pokemon must not be able to damage shedinja
+
+    sword dance
+
+
+
+
+
+
+
+
+
+
+
