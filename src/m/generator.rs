@@ -122,12 +122,7 @@ impl<const EO:u32,const F:u32, const TC:usize, const PC:usize> Generator<EO,F,TC
       for j in 0..trainerCountByBattle {
         let trainerIdx = (i * trainerCountByBattle + j) as usize;
 
-        let valid = if Facility::isMulti(F) && i % 2 == 1 {
-          let (v0,v1) = state.trainers.split_at_mut(trainerIdx);
-          self.addPokemonsToTrainer(&mut rng, &mut v1[0], false, Some(&v0[v0.len() - 1]), trainerIdx)
-        } else {
-          self.addPokemonsToTrainer(&mut rng, &mut state.trainers[trainerIdx], false, None, trainerIdx)
-        };
+        let valid = self.addPokemonsToTrainer(&mut rng, &mut state.trainers[trainerIdx], false, None, trainerIdx);
 
         if !valid
           { return None; }

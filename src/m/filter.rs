@@ -1,5 +1,10 @@
 use super::{Stmon, State, Strainer,Pmon,Options,Facility,JTMONS,JTRAINERS,format_name,ExecObjective};
 
+const SHEDINJA_RATING_HIT_ONCE = 0.5f32;
+const SHEDINJA_RATING_BAD = 0.0f32;
+const SHEDINJA_RATING_CAN_SETUP = 1.0f32;
+//rating 0.75 indicate that if shedinja is already setup, it ohko+outspeed it. but shedinja cant setup on it
+
 pub struct Filter<const EO:u32> {
   pub opts:Options,
   /** the first mon of each trainer must have perfect rating */
@@ -7,11 +12,13 @@ pub struct Filter<const EO:u32> {
   /** the 2nd+ mon of each trainer must have a rating which permit respecting filter_min_rating */
   pub search_nearby_jtmonsRespectingFilter_2nd_mon:Vec<bool>,
   pub find_day_seed_jtmonsRespectingFilterByIdx:Vec<Vec<bool>>,
-  pub max_rating_by_pmon:Vec<(u32,f32)>,
   pub initial_max_rating_by_pmon:Vec<(u32,f32)>,
+  pub find_day_seed_trainer:[Option<u16>;7],
+
+  //changeable
+  pub max_rating_by_pmon:Vec<(u32,f32)>,
   pub updatable_filter_min_rating:f32,
   pub pmon_idx_to_delete:Vec<bool>,
-  pub find_day_seed_trainer:[Option<u16>;7],
 
   max_possible_rating:f32,
 }
@@ -213,16 +220,31 @@ impl<const EO:u32> Filter<EO> {
     (0..pmon.ratingsLen).for_each(|move_idx|{
       let mut rating:f32 = {
         let r0 = pmon.getPokemonRating(&trainer.pokemons[0], move_idx);
-        if r0 != 1.0 { // first mon must have perfect score
-          0f32
-        } else {
-          let mut rating:f32 = 0f32;
-          rating += r0;
-          for trainerPokemon in trainer.pokemons.iter().skip(1) {
-            rating += pmon.getPokemonRating(&trainerPokemon, move_idx);
-          }
-          rating
+        if r0 != SHEDINJA_RATING_CAN_SETUP { // first mon must have perfect score
+          return 0f32;
         }
+
+        if pmon.is_shedinja() {
+          if PC == 4 {
+            return 0f32; //shedijna is 1v1 only
+          }
+          let r1 = pmon.getPokemonRating(&trainer.pokemons[1], move_idx);
+          if r1 == SHEDINJA_RATING_BAD
+            { return 0f32; }
+          let r2 = pmon.getPokemonRating(&trainer.pokemons[2], move_idx);
+          if r2 == SHEDINJA_RATING_BAD
+            { return 0f32; }
+          if r1 == SHEDINJA_RATING_HIT_ONCE && r2 == SHEDINJA_RATING_HIT_ONCE //both hit shedinja once
+            { return 0f32; }
+          return 1f32;
+        }
+
+        let mut rating:f32 = 0f32;
+        rating += r0;
+        for trainerPokemon in trainer.pokemons.iter().skip(1) {
+          rating += pmon.getPokemonRating(&trainerPokemon, move_idx);
+        }
+        return rating;
       };
       if rating > best_rating {
         best_rating = rating;
@@ -242,10 +264,6 @@ impl<const EO:u32> Filter<EO> {
   #[inline(never)] // to be able to cpu profile
   pub fn onTrainerSelected<const F:u32, const PC:usize>(&mut self, trainer:&Strainer<PC>, trainerIdx:usize) -> bool {
     if EO != ExecObjective::search_easy {
-      return true;
-    }
-
-    if Facility::isMulti(F) {   // filter is based on 2 trainers
       return true;
     }
 

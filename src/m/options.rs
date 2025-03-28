@@ -71,6 +71,9 @@ impl Pmon {
   pub fn getPokemonRating(&self, trainerPokemon:&Stmon, move_idx:usize) -> f32 {
     unsafe { *self.ratingsByMovePokemonAndAbility.get_unchecked(trainerPokemon.id as usize * 2 + trainerPokemon.ability as usize + move_idx * TMON_COUNT*2) }
   }
+  pub fn is_shedinja(&self) -> bool {
+    self.id == 0
+  }
 }
 
 #[derive(Serialize, Deserialize, Debug,Clone)]
