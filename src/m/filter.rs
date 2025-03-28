@@ -7,9 +7,9 @@ const SHEDINJA_RATING_CAN_SETUP = 1.0f32;
 
 pub struct Filter<const EO:u32> {
   pub opts:Options,
-  /** the first mon of each trainer must have perfect rating */
+  /** the mon in first round of each trainer must have perfect rating. (1 mon for singles, 2 mon for double) */
   pub search_nearby_jtmonsRespectingFilter_1st_mon:Vec<bool>,
-  /** the 2nd+ mon of each trainer must have a rating which permit respecting filter_min_rating */
+  /** the mon in 2nd+ round of each trainer must have a rating which permit respecting filter_min_rating */
   pub search_nearby_jtmonsRespectingFilter_2nd_mon:Vec<bool>,
   pub find_day_seed_jtmonsRespectingFilterByIdx:Vec<Vec<bool>>,
   pub initial_max_rating_by_pmon:Vec<(u32,f32)>,
@@ -183,10 +183,11 @@ impl<const EO:u32> Filter<EO> {
         true
       },
       ExecObjective::search_easy => {
-        let is_fst_trainer_mon = jtmon_idx % Facility::getPokemonCountByTrainer(F) == 0;
+        let is_fst_trainer_mon = jtmon_idx % Facility::getPokemonCountByTrainer(F) < Facility::getPokemonCountByTrainer(F) - 2;
         if is_fst_trainer_mon {
           unsafe { *self.search_nearby_jtmonsRespectingFilter_1st_mon.get_unchecked(monId as usize) }
         } else {
+          //NO_PROD not sure for shedinja
           unsafe { *self.search_nearby_jtmonsRespectingFilter_2nd_mon.get_unchecked(monId as usize) }
         }
       },
