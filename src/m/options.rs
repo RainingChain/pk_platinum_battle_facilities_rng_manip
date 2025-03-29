@@ -33,6 +33,8 @@ pub struct Pmon {
   pub ratingsByMove:Vec<Vec<(u16,u8,f32)>>,
   #[serde(default = "default_ratingsByMovePokemonAndAbility")]
   pub ratingsByMovePokemonAndAbility:Vec<f32>,
+  #[serde(default = "default_is_shedinja")]
+  pub is_shedinja:bool
 }
 
 fn default_ratingsByMovePokemonAndAbility() -> Vec<f32> {
@@ -44,11 +46,15 @@ fn default_id() -> u32 {
 fn default_ratingsLen() -> usize {
   0
 }
+fn default_is_shedinja() -> bool {
+  false
+}
 
 
 impl Pmon {
   pub fn init(&mut self){
     self.ratingsLen = self.ratingsByMove.len();
+    self.is_shedinja = self.name == "Shedinja";
     self.ratingsByMovePokemonAndAbility.resize(TMON_COUNT*2 * self.ratingsByMove.len(), 0f32);
 
     for (i,ratings) in self.ratingsByMove.iter().enumerate() {
@@ -119,7 +125,14 @@ impl Options {
     Options::from_json(&Options::default_json_str())
   }
   pub fn from_json(json:&str) -> Options {
-    serde_json::from_str(&json).unwrap()
+    let res = serde_json::from_str(&json);
+    match res {
+      Ok(opts) => { opts },
+      Err(err) => {
+        std::fs::write("from_json.txt", json);
+        panic!("{}", err);
+      }
+    }
   }
 
   pub fn default_json_str() -> String {

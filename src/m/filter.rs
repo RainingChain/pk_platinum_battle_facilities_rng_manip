@@ -1,8 +1,8 @@
 use super::{Stmon, State, Strainer,Pmon,Options,Facility,JTMONS,JTRAINERS,format_name,ExecObjective};
 
-const SHEDINJA_RATING_HIT_ONCE = 0.5f32;
-const SHEDINJA_RATING_BAD = 0.0f32;
-const SHEDINJA_RATING_CAN_SETUP = 1.0f32;
+const SHEDINJA_RATING_HIT_ONCE:f32 = 0.5f32;
+const SHEDINJA_RATING_BAD:f32 = 0.0f32;
+const SHEDINJA_RATING_CAN_SETUP:f32 = 1.0f32;
 //rating 0.75 indicate that if shedinja is already setup, it ohko+outspeed it. but shedinja cant setup on it
 
 pub struct Filter<const EO:u32> {
@@ -212,6 +212,48 @@ impl<const EO:u32> Filter<EO> {
     }
   }
 
+  pub fn evalTrainerRating_for_move<const PC:usize>(pmon:&Pmon, trainer:&Strainer<PC>,move_idx:usize) -> f32 {
+    let r0 = pmon.getPokemonRating(&trainer.pokemons[0], move_idx);
+
+    if !pmon.is_shedinja {
+      if r0 != 1f32 {
+        return 0f32;
+      }
+
+      let mut rating:f32 = 0f32;
+      rating += r0;
+      for trainerPokemon in trainer.pokemons.iter().skip(1) {
+        rating += pmon.getPokemonRating(&trainerPokemon, move_idx);
+      }
+      return rating;
+    }
+
+
+    if PC == 4 {
+      return 0f32; //shedijna is 1v1 only
+    }
+
+    let r1 = pmon.getPokemonRating(&trainer.pokemons[1], move_idx);
+    let r2 = pmon.getPokemonRating(&trainer.pokemons[2], move_idx);
+    if r0 != 1f32 {
+      if r1 == 1f32 && r2 == 1f32 {
+        return 2.5f32; //player must use 2 other mons to kill first, then its guaranteed to win
+      }
+      return 0f32;
+    }
+
+    if r1 == SHEDINJA_RATING_BAD
+      { 0f32 }
+    else if r2 == SHEDINJA_RATING_BAD
+      { 0f32 }
+    else if r1 == SHEDINJA_RATING_HIT_ONCE && r2 == SHEDINJA_RATING_HIT_ONCE //both hit shedinja once
+      { 0f32 }
+    else {
+      3f32
+    }
+  }
+
+
   // with min_rating=21, about ~50% of exec time is spent in this function
   // possible optimisation: if tmon has bad score for all ratingLen, skip everything
   pub fn evalTrainerRating<const PC:usize>(pmon:&Pmon, trainer:&Strainer<PC>) -> (f32,u8) {
@@ -219,34 +261,8 @@ impl<const EO:u32> Filter<EO> {
     let mut best_move_idx:u8 = 0;
 
     (0..pmon.ratingsLen).for_each(|move_idx|{
-      let mut rating:f32 = {
-        let r0 = pmon.getPokemonRating(&trainer.pokemons[0], move_idx);
-        if r0 != SHEDINJA_RATING_CAN_SETUP { // first mon must have perfect score
-          return 0f32;
-        }
+      let mut rating = Self::evalTrainerRating_for_move(pmon, trainer, move_idx);
 
-        if pmon.is_shedinja() {
-          if PC == 4 {
-            return 0f32; //shedijna is 1v1 only
-          }
-          let r1 = pmon.getPokemonRating(&trainer.pokemons[1], move_idx);
-          if r1 == SHEDINJA_RATING_BAD
-            { return 0f32; }
-          let r2 = pmon.getPokemonRating(&trainer.pokemons[2], move_idx);
-          if r2 == SHEDINJA_RATING_BAD
-            { return 0f32; }
-          if r1 == SHEDINJA_RATING_HIT_ONCE && r2 == SHEDINJA_RATING_HIT_ONCE //both hit shedinja once
-            { return 0f32; }
-          return 1f32;
-        }
-
-        let mut rating:f32 = 0f32;
-        rating += r0;
-        for trainerPokemon in trainer.pokemons.iter().skip(1) {
-          rating += pmon.getPokemonRating(&trainerPokemon, move_idx);
-        }
-        return rating;
-      };
       if rating > best_rating {
         best_rating = rating;
         best_move_idx = move_idx as u8;
